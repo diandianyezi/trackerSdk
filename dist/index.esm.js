@@ -43,17 +43,46 @@ var Tracker = /** @class */ (function () {
             jsError: false
         };
     };
+    Tracker.prototype.sendTracker = function (data) {
+        this.reportTracker(data);
+    };
     Tracker.prototype.captureEvents = function (mouseEventList, targetKey, data) {
+        var _this = this;
         mouseEventList.forEach(function (event) {
             window.addEventListener(event, function () {
                 console.info('监听到了');
+                _this.reportTracker({
+                    event: event,
+                    targetKey: targetKey,
+                    data: data
+                });
             });
         });
+    };
+    Tracker.prototype.setUserId = function (uuid) {
+        this.data.uuid = uuid;
+    };
+    Tracker.prototype.setExtra = function (extra) {
+        this.data.extra = extra;
     };
     Tracker.prototype.installTracker = function () {
         if (this.data.historyTracker) {
             this.captureEvents(['pushState', 'replaceState', 'popState'], 'history-pv');
         }
+        if (this.data.hashTracker) {
+            this.captureEvents(['hashChange'], 'hash-pv');
+        }
+    };
+    Tracker.prototype.reportTracker = function (data) {
+        // 不能传json格式，这里我们直接传blob格式
+        var params = Object.assign(this.data, data, {
+            time: +new Date()
+        });
+        var headers = {
+            type: 'application/x-www-form-urlencoded'
+        };
+        var blob = new Blob([JSON.stringify(params)], headers);
+        navigator.sendBeacon(this.data.requestUrl, blob);
     };
     return Tracker;
 }());

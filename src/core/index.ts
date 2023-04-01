@@ -23,10 +23,19 @@ export default class Tracker {
     }
   }
 
+  public sendTracker <T>(data: T) {
+    this.reportTracker(data);
+  }
+
   private captureEvents <T>(mouseEventList: string[], targetKey: string, data?: T) {
     mouseEventList.forEach(event => {
       window.addEventListener(event, () => {
-        console.info('监听到了')
+        console.info('监听到了');
+        this.reportTracker({
+          event,
+          targetKey,
+          data
+        })
       })
     })
   }
@@ -46,5 +55,17 @@ export default class Tracker {
     if(this.data.hashTracker) {
       this.captureEvents(['hashChange'], 'hash-pv');
     }
+  }
+
+  private reportTracker <T>(data: T) {
+    // 不能传json格式，这里我们直接传blob格式
+    const params = Object.assign(this.data, data, {
+      time: +new Date()
+    })
+    const headers = {
+      type: 'application/x-www-form-urlencoded'
+    }
+    let blob = new Blob([JSON.stringify(params)], headers)
+    navigator.sendBeacon(this.data.requestUrl, blob);
   }
 }
