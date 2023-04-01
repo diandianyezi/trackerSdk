@@ -8,7 +8,7 @@
  * @jsError js 和 promise 报错异常上报
  */
 
- export interface DefaultOptons {
+ export interface DefaultOptions {
   uuid: string | undefined,
   requestUrl: string | undefined,
   historyTracker: boolean,
@@ -22,22 +22,19 @@
 
 
 
-//必传参数 requestUrl
-
-export interface Options extends Partial<DefaultOptons> {
+//必传参数 requestUrl,partial 会将DefaultOptions里的选项改为非必填
+export interface Options extends Partial<DefaultOptions> {
   requestUrl: string,
 }
 
 
 
 //版本
-
 export enum TrackerConfig {
   version = '1.0.0'
 }
 
 //上报必传参数
-
 export type reportTrackerData = {
   [key: string]: any,
   event: string,
