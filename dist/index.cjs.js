@@ -29,6 +29,8 @@ var createHistoryEvent = function (type) {
 };
 
 // export const a = 1;
+var MouseEventList = ['click', 'dblclick', 'contextmenu', 'mousedown', 'mouseup',
+    'mouseenter', 'mouseout', 'mouseover'];
 var Tracker = /** @class */ (function () {
     function Tracker(options) {
         this.data = Object.assign(this.initDef(), options);
@@ -47,6 +49,21 @@ var Tracker = /** @class */ (function () {
     };
     Tracker.prototype.sendTracker = function (data) {
         this.reportTracker(data);
+    };
+    Tracker.prototype.targetKeyReport = function () {
+        var _this = this;
+        MouseEventList.forEach(function (ev) {
+            window.addEventListener(ev, function (e) {
+                var target = e.target;
+                var targetKey = target.getAttribute('target-key');
+                if (targetKey) {
+                    _this.reportTracker({
+                        event: ev,
+                        targetKey: targetKey
+                    });
+                }
+            });
+        });
     };
     Tracker.prototype.captureEvents = function (mouseEventList, targetKey, data) {
         var _this = this;
@@ -74,6 +91,38 @@ var Tracker = /** @class */ (function () {
         if (this.data.hashTracker) {
             this.captureEvents(['hashChange'], 'hash-pv');
         }
+        if (this.data.domTracker) {
+            this.targetKeyReport();
+        }
+        if (this.data.jsError) {
+            this.jsError();
+        }
+    };
+    Tracker.prototype.errorEvent = function () {
+        var _this = this;
+        window.addEventListener('error', function (event) {
+            _this.reportTracker({
+                event: 'error',
+                targetKey: 'message',
+                message: event.message
+            });
+        });
+    };
+    Tracker.prototype.promiseReject = function () {
+        var _this = this;
+        window.addEventListener('unhandledrejection', function (event) {
+            event.promise.catch(function (error) {
+                _this.reportTracker({
+                    event: 'promise',
+                    targetKey: 'message',
+                    message: error
+                });
+            });
+        });
+    };
+    Tracker.prototype.jsError = function () {
+        this.errorEvent();
+        this.promiseReject();
     };
     Tracker.prototype.reportTracker = function (data) {
         // 不能传json格式，这里我们直接传blob格式

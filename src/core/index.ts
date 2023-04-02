@@ -2,6 +2,9 @@
 // console.info("1");
 import { DefaultOptions, TrackerConfig, Options } from '../type/index';
 import { createHistoryEvent } from '../utils/pv';
+
+const MouseEventList:string[] = ['click', 'dblclick', 'contextmenu', 'mousedown', 'mouseup',
+'mouseenter', 'mouseout', 'mouseover']
 export default class Tracker {
   public data: Options;
 
@@ -25,6 +28,21 @@ export default class Tracker {
 
   public sendTracker <T>(data: T) {
     this.reportTracker(data);
+  }
+
+  private targetKeyReport() {
+    MouseEventList.forEach((ev) => {
+      window.addEventListener(ev, (e) => {
+        const target = e.target as HTMLElement;
+        const targetKey = target.getAttribute('target-key');
+        if(targetKey) {
+          this.reportTracker({
+            event: ev,
+            targetKey
+          })
+        }
+      })
+    })
   }
 
   private captureEvents <T>(mouseEventList: string[], targetKey: string, data?: T) {
@@ -55,6 +73,39 @@ export default class Tracker {
     if(this.data.hashTracker) {
       this.captureEvents(['hashChange'], 'hash-pv');
     }
+    if(this.data.domTracker) {
+      this.targetKeyReport()
+    }
+    if(this.data.jsError) {
+      this.jsError()
+    }
+  }
+
+  private errorEvent () {
+    window.addEventListener('error', (event) => {
+      this.reportTracker({
+        event: 'error',
+        targetKey: 'message',
+        message: event.message
+      })
+    })
+  }
+
+  private promiseReject () {
+    window.addEventListener('unhandledrejection', (event) => {
+      event.promise.catch(error => {
+        this.reportTracker({
+          event: 'promise',
+          targetKey: 'reject',
+          message: error
+        })
+      })
+    })
+  }
+
+  private jsError () {
+    this.errorEvent();
+    this.promiseReject()
   }
 
   private reportTracker <T>(data: T) {

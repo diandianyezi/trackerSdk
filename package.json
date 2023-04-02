@@ -1,13 +1,17 @@
 {
-  "name": "trackersdk",
+  "name": "@zhangting5/tracker-sdk",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "dist/index.cjs.js",
+  "module": "dist/index.esm.js",
+  "browser": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "rollup -c"
   },
+  "keywords": ["埋点", "前端", "tracker"],
   "author": "zhangting",
+  "files": ["dist"],
   "license": "ISC",
   "devDependencies": {
     "rollup": "^2.77.0",
